@@ -13,37 +13,62 @@ pub struct ApiError {
     pub error: String,
 }
 
-pub async fn list_projects(State(state): State<AppState>) -> Json<Vec<Project>> {
-    Json(state.store.list().await)
+type ApiResult<T> = Result<T, (StatusCode, Json<ApiError>)>;
+
+fn internal_err(e: anyhow::Error) -> (StatusCode, Json<ApiError>) {
+    tracing::error!("store error: {e:#}");
+    (
+        StatusCode::INTERNAL_SERVER_ERROR,
+        Json(ApiError {
+            error: "Internal server error".to_string(),
+        }),
+    )
+}
+
+pub async fn list_projects(State(state): State<AppState>) -> ApiResult<Json<Vec<Project>>> {
+    state.store.list().await.map(Json).map_err(internal_err)
 }
 
 pub async fn get_project(
     State(state): State<AppState>,
     Path(id): Path<String>,
-) -> Result<Json<Project>, (StatusCode, Json<ApiError>)> {
-    state.store.get(&id).await.map(Json).ok_or((
-        StatusCode::NOT_FOUND,
-        Json(ApiError {
-            error: "Project not found".to_string(),
-        }),
-    ))
+) -> ApiResult<Json<Project>> {
+    match state.store.get(&id).await {
+        Ok(Some(p)) => Ok(Json(p)),
+        Ok(None) => Err((
+            StatusCode::NOT_FOUND,
+            Json(ApiError {
+                error: "Project not found".to_string(),
+            }),
+        )),
+        Err(e) => Err(internal_err(e)),
+    }
 }
 
 pub async fn create_project(
     State(state): State<AppState>,
     Json(req): Json<CreateProjectRequest>,
-) -> (StatusCode, Json<Project>) {
-    let project = state.store.create(req).await;
-    (StatusCode::CREATED, Json(project))
+) -> ApiResult<(StatusCode, Json<Project>)> {
+    state
+        .store
+        .create(req)
+        .await
+        .map(|p| (StatusCode::CREATED, Json(p)))
+        .map_err(internal_err)
 }
 
 pub async fn delete_project(
     State(state): State<AppState>,
     Path(id): Path<String>,
-) -> StatusCode {
-    if state.store.delete(&id).await {
-        StatusCode::NO_CONTENT
-    } else {
-        StatusCode::NOT_FOUND
+) -> ApiResult<StatusCode> {
+    match state.store.delete(&id).await {
+        Ok(true) => Ok(StatusCode::NO_CONTENT),
+        Ok(false) => Err((
+            StatusCode::NOT_FOUND,
+            Json(ApiError {
+                error: "Project not found".to_string(),
+            }),
+        )),
+        Err(e) => Err(internal_err(e)),
     }
 }

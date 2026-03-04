@@ -6,6 +6,8 @@ pub struct AppConfig {
     pub host: String,
     #[serde(default = "default_port")]
     pub port: u16,
+    #[serde(default = "default_db_path")]
+    pub db_path: String,
     #[serde(default)]
     pub ipfs_api_url: Option<String>,
     #[serde(default)]
@@ -20,10 +22,15 @@ fn default_port() -> u16 {
     3100
 }
 
+fn default_db_path() -> String {
+    "weavefront.db".to_string()
+}
+
 impl AppConfig {
     pub fn from_env() -> Self {
         Self {
             host: std::env::var("WEAVEFRONT_HOST").unwrap_or_else(|_| default_host()),
+            db_path: std::env::var("WEAVEFRONT_DB_PATH").unwrap_or_else(|_| default_db_path()),
             port: std::env::var("WEAVEFRONT_PORT")
                 .ok()
                 .and_then(|p| p.parse().ok())

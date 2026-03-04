@@ -34,9 +34,12 @@ async fn main() -> anyhow::Result<()> {
         .as_ref()
         .map(|url| IpfsService::new(url.clone()));
 
+    let store = ProjectStore::open(&config.db_path)?;
+    tracing::info!("database opened at {}", config.db_path);
+
     let state = AppState {
         config: config.clone(),
-        store: ProjectStore::new(),
+        store,
         ipfs,
     };
 
