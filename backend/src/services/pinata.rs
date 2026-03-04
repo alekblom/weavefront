@@ -6,6 +6,7 @@ use serde::Deserialize;
 pub struct PinataService {
     client: Client,
     jwt: String,
+    gateway_base: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -20,10 +21,11 @@ struct PinResponse {
 }
 
 impl PinataService {
-    pub fn new(jwt: String) -> Self {
+    pub fn new(jwt: String, gateway_base: String) -> Self {
         Self {
             client: Client::new(),
             jwt,
+            gateway_base,
         }
     }
 
@@ -56,7 +58,8 @@ impl PinataService {
         Ok((pin.ipfs_hash, size))
     }
 
-    pub fn gateway_url(cid: &str) -> String {
-        format!("https://gateway.pinata.cloud/ipfs/{}", cid)
+    pub fn gateway_url(&self, cid: &str) -> String {
+        let base = self.gateway_base.trim_end_matches('/');
+        format!("{}/{}", base, cid)
     }
 }

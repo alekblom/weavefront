@@ -7,7 +7,6 @@ use serde::Serialize;
 
 use crate::models::deployment::Deployment;
 use crate::routes::projects::ApiError;
-use crate::services::pinata::PinataService;
 use crate::AppState;
 
 #[derive(Serialize)]
@@ -105,7 +104,7 @@ pub async fn deploy_upload(
     // Upload to Pinata
     match pinata.pin_file(&filename, data.to_vec()).await {
         Ok((cid, size)) => {
-            let gateway_url = PinataService::gateway_url(&cid);
+            let gateway_url = pinata.gateway_url(&cid);
             let _ = state.store.complete_deployment(&dep_id, &cid, &gateway_url, size).await;
             let now = crate::services::store::now_iso_pub();
             let _ = state.store.update_status(&project_id, "live", Some(&now)).await;

@@ -11,6 +11,8 @@ pub struct AppConfig {
     pub admin_password: String,
     #[serde(default)]
     pub pinata_jwt: Option<String>,
+    #[serde(default = "default_ipfs_gateway")]
+    pub ipfs_gateway: String,
     #[serde(default)]
     pub ipfs_api_url: Option<String>,
     #[serde(default)]
@@ -29,6 +31,10 @@ fn default_db_path() -> String {
     "weavefront.db".to_string()
 }
 
+fn default_ipfs_gateway() -> String {
+    "https://cloudflare-ipfs.com/ipfs/".to_string()
+}
+
 impl AppConfig {
     pub fn from_env() -> Self {
         Self {
@@ -41,6 +47,7 @@ impl AppConfig {
             admin_password: std::env::var("ADMIN_PASSWORD")
                 .expect("ADMIN_PASSWORD must be set in environment"),
             pinata_jwt: std::env::var("PINATA_JWT").ok(),
+            ipfs_gateway: std::env::var("IPFS_GATEWAY").unwrap_or_else(|_| default_ipfs_gateway()),
             ipfs_api_url: std::env::var("IPFS_API_URL").ok(),
             arweave_gateway_url: std::env::var("ARWEAVE_GATEWAY_URL").ok(),
         }

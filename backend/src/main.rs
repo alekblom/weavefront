@@ -39,7 +39,7 @@ async fn main() -> anyhow::Result<()> {
     let pinata = config
         .pinata_jwt
         .as_ref()
-        .map(|jwt| PinataService::new(jwt.clone()));
+        .map(|jwt| PinataService::new(jwt.clone(), config.ipfs_gateway.clone()));
 
     let store = ProjectStore::open(&config.db_path)?;
     tracing::info!("database opened at {}", config.db_path);
