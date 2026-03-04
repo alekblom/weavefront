@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weavefront - Web3 Hosting Panel</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #08080c;
+            color: #c8c8d0;
+            min-height: 100vh;
+        }
+
+        header {
+            padding: 6rem 2rem 3rem;
+            text-align: center;
+            max-width: 680px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 2rem;
+        }
+
+        .logo-mark {
+            width: 48px;
+            height: 48px;
+            position: relative;
+        }
+
+        .logo-mark::before,
+        .logo-mark::after {
+            content: '';
+            position: absolute;
+            border-radius: 50%;
+        }
+
+        .logo-mark::before {
+            width: 48px;
+            height: 48px;
+            border: 2px solid #6c5ce7;
+            top: 0;
+            left: 0;
+        }
+
+        .logo-mark::after {
+            width: 32px;
+            height: 32px;
+            border: 2px solid #a29bfe;
+            top: 8px;
+            left: 8px;
+        }
+
+        .logo-text {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: -0.03em;
+        }
+
+        header h2 {
+            font-size: 2.8rem;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1.15;
+            letter-spacing: -0.03em;
+            margin-bottom: 1.25rem;
+        }
+
+        header h2 span {
+            background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        header p {
+            font-size: 1.15rem;
+            line-height: 1.7;
+            color: #888;
+        }
+
+        .features {
+            max-width: 800px;
+            margin: 4rem auto;
+            padding: 0 2rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .feature {
+            border: 1px solid #1a1a24;
+            border-radius: 12px;
+            padding: 1.75rem;
+            background: #0d0d14;
+            transition: border-color 0.2s;
+        }
+
+        .feature:hover {
+            border-color: #2a2a3e;
+        }
+
+        .feature h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #e0e0e8;
+            margin-bottom: 0.5rem;
+        }
+
+        .feature p {
+            font-size: 0.9rem;
+            line-height: 1.6;
+            color: #666;
+        }
+
+        .feature .icon {
+            font-size: 1.5rem;
+            margin-bottom: 0.75rem;
+            display: block;
+        }
+
+        .targets {
+            max-width: 800px;
+            margin: 4rem auto;
+            padding: 0 2rem;
+            text-align: center;
+        }
+
+        .targets h3 {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #555;
+            margin-bottom: 1.5rem;
+        }
+
+        .target-list {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .target {
+            font-size: 1rem;
+            color: #777;
+            padding: 0.5rem 1rem;
+            border: 1px solid #1a1a24;
+            border-radius: 8px;
+            background: #0d0d14;
+        }
+
+        .cta {
+            text-align: center;
+            padding: 4rem 2rem;
+        }
+
+        .cta a {
+            display: inline-block;
+            padding: 0.85rem 2rem;
+            background: linear-gradient(135deg, #6c5ce7, #5a4bd1);
+            color: #fff;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: opacity 0.2s;
+        }
+
+        .cta a:hover { opacity: 0.85; }
+
+        .cta p {
+            margin-top: 0.75rem;
+            font-size: 0.85rem;
+            color: #555;
+        }
+
+        .status-banner {
+            text-align: center;
+            padding: 0.6rem 1rem;
+            background: #12121a;
+            border-bottom: 1px solid #1a1a24;
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        .status-banner strong {
+            color: #d4a017;
+        }
+
+        footer {
+            text-align: center;
+            padding: 4rem 2rem 3rem;
+            color: #444;
+            font-size: 0.8rem;
+            max-width: 560px;
+            margin: 0 auto;
+            line-height: 1.7;
+        }
+
+        footer a {
+            color: #666;
+            text-decoration: none;
+        }
+
+        footer a:hover { color: #999; }
+
+        footer .disclaimer {
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #1a1a24;
+            font-size: 0.75rem;
+            color: #3a3a3a;
+        }
+
+        @media (max-width: 480px) {
+            header { padding: 4rem 1.5rem 2rem; }
+            header h2 { font-size: 2rem; }
+            .features { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="status-banner">
+        <strong>Early Development</strong> &mdash; Weavefront is being built in public. Not yet ready for production use.
+    </div>
+
+    <header>
+        <div class="logo">
+            <div class="logo-mark"></div>
+            <span class="logo-text">Weavefront</span>
+        </div>
+        <h2>Deploy to the <span>decentralized web</span> from one panel</h2>
+        <p>Open source hosting panel for Web3. Deploy static sites and dApps to IPFS, Arweave, and Filecoin. Manage domains, storage, and deployments with AI-assisted tooling.</p>
+    </header>
+
+    <section class="features">
+        <div class="feature">
+            <span class="icon">&#9678;</span>
+            <h3>Multi-Protocol Deploy</h3>
+            <p>Push to IPFS, Arweave, or Filecoin from one interface. Git-based workflows or direct upload.</p>
+        </div>
+        <div class="feature">
+            <span class="icon">&#9883;</span>
+            <h3>Domain Management</h3>
+            <p>Connect traditional domains, ENS names, and Handshake domains. SSL and gateway config included.</p>
+        </div>
+        <div class="feature">
+            <span class="icon">&#9041;</span>
+            <h3>AI Assistant</h3>
+            <p>Natural language deployment, diagnostics, and optimization. Ask it to deploy, debug, or configure.</p>
+        </div>
+        <div class="feature">
+            <span class="icon">&#8962;</span>
+            <h3>Self-Hosted</h3>
+            <p>Run on your own server. Your infrastructure, your keys, your responsibility. Fully open source.</p>
+        </div>
+        <div class="feature">
+            <span class="icon">&#9878;</span>
+            <h3>Storage Dashboard</h3>
+            <p>Monitor pinning, permanent storage costs, and replication across protocols from one view.</p>
+        </div>
+        <div class="feature">
+            <span class="icon">&#9881;</span>
+            <h3>Rust Backend</h3>
+            <p>Built in Rust for performance and safety. Lightweight, fast, and reliable on minimal hardware.</p>
+        </div>
+    </section>
+
+    <section class="targets">
+        <h3>Deploy Targets</h3>
+        <div class="target-list">
+            <div class="target">IPFS</div>
+            <div class="target">Arweave</div>
+            <div class="target">Filecoin</div>
+        </div>
+    </section>
+
+    <section class="cta">
+        <a href="https://github.com/buidlings/weavefront">View on GitHub</a>
+        <p>MIT Licensed &mdash; Free and open source</p>
+    </section>
+
+    <footer>
+        <p>Weavefront &mdash; a <a href="https://buidlings.com">Buidlings</a> project by <a href="https://alexiuz.com">Alexiuz AS</a></p>
+        <div class="disclaimer">
+            This software is provided "as-is" without warranty of any kind. You use Weavefront entirely at your own risk. The authors and contributors accept no responsibility for data loss, security incidents, financial losses, or any other damages arising from the use of this software. Weavefront does not custody keys or funds. You are solely responsible for your infrastructure, credentials, and deployments.
+        </div>
+    </footer>
+</body>
+</html>
