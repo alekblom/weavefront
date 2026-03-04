@@ -35,6 +35,11 @@ impl ProjectStore {
                 last_deployed TEXT
             );
 
+            CREATE TABLE IF NOT EXISTS sessions (
+                token       TEXT PRIMARY KEY,
+                created_at  TEXT NOT NULL
+            );
+
             CREATE TABLE IF NOT EXISTS deployments (
                 id          TEXT PRIMARY KEY,
                 project_id  TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
@@ -118,6 +123,97 @@ impl ProjectStore {
         let affected = conn.execute("DELETE FROM projects WHERE id = ?1", [id])?;
         Ok(affected > 0)
     }
+
+    pub async fn update_status(&self, id: &str, status: &str, last_deployed: Option<&str>) -> Result<bool> {
+        let conn = self.conn.lock().await;
+        let affected = conn.execute(
+            "UPDATE projects SET status = ?1, last_deployed = COALESCE(?2, last_deployed) WHERE id = ?3",
+            rusqlite::params![status, last_deployed, id],
+        )?;
+        Ok(affected > 0)
+    }
+
+    // -- Sessions --
+
+    pub async fn create_session(&self, token: &str) -> Result<()> {
+        let conn = self.conn.lock().await;
+        conn.execute(
+            "INSERT INTO sessions (token, created_at) VALUES (?1, ?2)",
+            rusqlite::params![token, now_iso()],
+        )?;
+        Ok(())
+    }
+
+    pub async fn validate_session(&self, token: &str) -> Result<bool> {
+        let conn = self.conn.lock().await;
+        let count: i64 = conn.query_row(
+            "SELECT COUNT(*) FROM sessions WHERE token = ?1",
+            [token],
+            |row| row.get(0),
+        )?;
+        Ok(count > 0)
+    }
+
+    pub async fn delete_session(&self, token: &str) -> Result<()> {
+        let conn = self.conn.lock().await;
+        conn.execute("DELETE FROM sessions WHERE token = ?1", [token])?;
+        Ok(())
+    }
+
+    // -- Deployments --
+
+    pub async fn create_deployment(&self, project_id: &str, target: &str) -> Result<String> {
+        let id = format!("dep_{}", hex_id());
+        let conn = self.conn.lock().await;
+        conn.execute(
+            "INSERT INTO deployments (id, project_id, target, status, created_at) VALUES (?1, ?2, ?3, 'uploading', ?4)",
+            rusqlite::params![id, project_id, target, now_iso()],
+        )?;
+        Ok(id)
+    }
+
+    pub async fn complete_deployment(&self, id: &str, content_hash: &str, gateway_url: &str, size_bytes: u64) -> Result<()> {
+        let conn = self.conn.lock().await;
+        conn.execute(
+            "UPDATE deployments SET status = 'live', content_hash = ?1, gateway_url = ?2, size_bytes = ?3, completed_at = ?4 WHERE id = ?5",
+            rusqlite::params![content_hash, gateway_url, size_bytes, now_iso(), id],
+        )?;
+        Ok(())
+    }
+
+    pub async fn fail_deployment(&self, id: &str) -> Result<()> {
+        let conn = self.conn.lock().await;
+        conn.execute(
+            "UPDATE deployments SET status = 'failed', completed_at = ?1 WHERE id = ?2",
+            rusqlite::params![now_iso(), id],
+        )?;
+        Ok(())
+    }
+
+    pub async fn list_deployments(&self, project_id: &str) -> Result<Vec<crate::models::deployment::Deployment>> {
+        let conn = self.conn.lock().await;
+        let mut stmt = conn.prepare(
+            "SELECT id, project_id, target, status, content_hash, gateway_url, size_bytes, created_at, completed_at FROM deployments WHERE project_id = ?1 ORDER BY created_at DESC"
+        )?;
+        let rows = stmt.query_map([project_id], |row| {
+            Ok(crate::models::deployment::Deployment {
+                id: row.get(0)?,
+                project_id: row.get(1)?,
+                target: row.get(2)?,
+                status: crate::models::deployment::DeploymentStatus::from_str(&row.get::<_, String>(3)?),
+                content_hash: row.get(4)?,
+                gateway_url: row.get(5)?,
+                size_bytes: row.get(6)?,
+                created_at: row.get(7)?,
+                completed_at: row.get(8)?,
+            })
+        })?;
+        let mut deployments = Vec::new();
+        for row in rows {
+            deployments.push(row?);
+        }
+        Ok(deployments)
+    }
 }
 
 fn row_to_project(row: &rusqlite::Row) -> Project {
@@ -160,6 +256,10 @@ fn hex_id() -> String {
         .unwrap()
         .as_nanos();
     format!("{:x}", ts)
+}
+
+pub fn now_iso_pub() -> String {
+    now_iso()
 }
 
 fn now_iso() -> String {

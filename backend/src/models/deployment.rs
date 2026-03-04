@@ -8,9 +8,9 @@ pub struct Deployment {
     pub status: DeploymentStatus,
     pub content_hash: Option<String>,
     pub gateway_url: Option<String>,
+    pub size_bytes: Option<u64>,
     pub created_at: String,
     pub completed_at: Option<String>,
-    pub size_bytes: Option<u64>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -21,4 +21,17 @@ pub enum DeploymentStatus {
     Pinning,
     Live,
     Failed,
+}
+
+impl DeploymentStatus {
+    pub fn from_str(s: &str) -> Self {
+        match s {
+            "queued" => Self::Queued,
+            "uploading" => Self::Uploading,
+            "pinning" => Self::Pinning,
+            "live" => Self::Live,
+            "failed" => Self::Failed,
+            _ => Self::Queued,
+        }
+    }
 }

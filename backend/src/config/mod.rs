@@ -8,6 +8,9 @@ pub struct AppConfig {
     pub port: u16,
     #[serde(default = "default_db_path")]
     pub db_path: String,
+    pub admin_password: String,
+    #[serde(default)]
+    pub pinata_jwt: Option<String>,
     #[serde(default)]
     pub ipfs_api_url: Option<String>,
     #[serde(default)]
@@ -35,6 +38,9 @@ impl AppConfig {
                 .ok()
                 .and_then(|p| p.parse().ok())
                 .unwrap_or_else(default_port),
+            admin_password: std::env::var("ADMIN_PASSWORD")
+                .expect("ADMIN_PASSWORD must be set in environment"),
+            pinata_jwt: std::env::var("PINATA_JWT").ok(),
             ipfs_api_url: std::env::var("IPFS_API_URL").ok(),
             arweave_gateway_url: std::env::var("ARWEAVE_GATEWAY_URL").ok(),
         }

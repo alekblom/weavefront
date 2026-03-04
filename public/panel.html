@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weavefront Panel</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #08080c;
+            color: #c8c8d0;
+            min-height: 100vh;
+        }
+
+        /* Login */
+        .login-wrap {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        .login-box {
+            background: #0d0d14;
+            border: 1px solid #1a1a24;
+            border-radius: 12px;
+            padding: 2.5rem;
+            width: 360px;
+        }
+        .login-box h1 {
+            font-size: 1.4rem;
+            color: #fff;
+            margin-bottom: 0.5rem;
+        }
+        .login-box p {
+            color: #666;
+            font-size: 0.85rem;
+            margin-bottom: 1.5rem;
+        }
+        .login-box input {
+            width: 100%;
+            padding: 0.7rem 1rem;
+            background: #111118;
+            border: 1px solid #2a2a3e;
+            border-radius: 8px;
+            color: #e0e0e8;
+            font-size: 0.95rem;
+            margin-bottom: 1rem;
+            outline: none;
+        }
+        .login-box input:focus { border-color: #6c5ce7; }
+        .login-error {
+            color: #e74c3c;
+            font-size: 0.85rem;
+            margin-bottom: 0.75rem;
+            display: none;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-block;
+            padding: 0.65rem 1.25rem;
+            background: linear-gradient(135deg, #6c5ce7, #5a4bd1);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        .btn:hover { opacity: 0.85; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-full { width: 100%; }
+        .btn-sm { padding: 0.45rem 0.9rem; font-size: 0.8rem; }
+        .btn-outline {
+            background: transparent;
+            border: 1px solid #2a2a3e;
+            color: #888;
+        }
+        .btn-outline:hover { border-color: #6c5ce7; color: #fff; }
+        .btn-danger { background: #e74c3c; }
+
+        /* Panel Layout */
+        .panel { display: none; }
+        .panel.active { display: block; }
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            border-bottom: 1px solid #1a1a24;
+            background: #0a0a10;
+        }
+        .topbar-brand {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #fff;
+        }
+        .topbar-brand span {
+            color: #6c5ce7;
+        }
+        .main {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        /* Section headers */
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        .section-header h2 {
+            font-size: 1.3rem;
+            color: #fff;
+        }
+
+        /* Project cards */
+        .project-card {
+            background: #0d0d14;
+            border: 1px solid #1a1a24;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            transition: border-color 0.2s;
+        }
+        .project-card:hover { border-color: #2a2a3e; }
+        .project-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+        .project-card h3 {
+            font-size: 1.1rem;
+            color: #fff;
+        }
+        .project-card .meta {
+            font-size: 0.8rem;
+            color: #555;
+        }
+        .badge {
+            display: inline-block;
+            font-size: 0.7rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 999px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .badge-created { background: #1a1a2e; color: #7c8aff; border: 1px solid #2a2a4e; }
+        .badge-deploying { background: #1e1a0a; color: #d4a017; border: 1px solid #3a2e0a; }
+        .badge-live { background: #0a1e0a; color: #2ecc71; border: 1px solid #0a3a0a; }
+        .badge-failed { background: #1e0a0a; color: #e74c3c; border: 1px solid #3a0a0a; }
+        .badge-ipfs { background: #0a1a2e; color: #4da2ff; border: 1px solid #0a2a4e; }
+
+        .project-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .deployment-info {
+            margin-top: 0.75rem;
+            padding: 0.75rem;
+            background: #0a0a10;
+            border-radius: 8px;
+            font-size: 0.85rem;
+        }
+        .deployment-info a {
+            color: #6c5ce7;
+            text-decoration: none;
+        }
+        .deployment-info a:hover { text-decoration: underline; }
+        .deployment-info code {
+            background: #111118;
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            color: #aaa;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal {
+            background: #0d0d14;
+            border: 1px solid #1a1a24;
+            border-radius: 12px;
+            padding: 2rem;
+            width: 420px;
+            max-width: 90vw;
+        }
+        .modal h2 {
+            font-size: 1.2rem;
+            color: #fff;
+            margin-bottom: 1.25rem;
+        }
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            color: #888;
+            margin-bottom: 0.35rem;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 0.6rem 0.8rem;
+            background: #111118;
+            border: 1px solid #2a2a3e;
+            border-radius: 8px;
+            color: #e0e0e8;
+            font-size: 0.9rem;
+            outline: none;
+        }
+        .form-group input:focus, .form-group select:focus { border-color: #6c5ce7; }
+        .form-actions {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: flex-end;
+            margin-top: 1.5rem;
+        }
+
+        /* Empty state */
+        .empty {
+            text-align: center;
+            padding: 3rem;
+            color: #444;
+        }
+        .empty p { margin-bottom: 1rem; }
+
+        /* Upload area */
+        .upload-area {
+            border: 2px dashed #2a2a3e;
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.2s;
+            margin-top: 0.5rem;
+        }
+        .upload-area:hover { border-color: #6c5ce7; }
+        .upload-area.dragover { border-color: #6c5ce7; background: #0d0d1a; }
+        .upload-area p { color: #666; font-size: 0.85rem; }
+        .upload-area input { display: none; }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: #0d0d14;
+            border: 1px solid #2a2a3e;
+            border-radius: 8px;
+            padding: 0.75rem 1.25rem;
+            font-size: 0.85rem;
+            color: #e0e0e8;
+            z-index: 200;
+            display: none;
+        }
+        .toast.error { border-color: #e74c3c; color: #e74c3c; }
+        .toast.success { border-color: #2ecc71; color: #2ecc71; }
+    </style>
+</head>
+<body>
+
+<!-- Login Screen -->
+<div id="login-screen" class="login-wrap">
+    <div class="login-box">
+        <h1>Weavefront</h1>
+        <p>Sign in to your hosting panel</p>
+        <div id="login-error" class="login-error"></div>
+        <input type="password" id="login-password" placeholder="Admin password" autofocus>
+        <button class="btn btn-full" id="login-btn">Sign In</button>
+    </div>
+</div>
+
+<!-- Panel -->
+<div id="panel" class="panel">
+    <div class="topbar">
+        <div class="topbar-brand"><span>W</span> Weavefront</div>
+        <button class="btn btn-sm btn-outline" id="logout-btn">Sign Out</button>
+    </div>
+    <div class="main">
+        <div class="section-header">
+            <h2>Projects</h2>
+            <button class="btn btn-sm" id="new-project-btn">New Project</button>
+        </div>
+        <div id="projects-list"></div>
+    </div>
+</div>
+
+<!-- New Project Modal -->
+<div class="modal-overlay" id="new-project-modal">
+    <div class="modal">
+        <h2>New Project</h2>
+        <div class="form-group">
+            <label>Project Name</label>
+            <input type="text" id="np-name" placeholder="my-dapp">
+        </div>
+        <div class="form-group">
+            <label>Deploy Target</label>
+            <select id="np-target">
+                <option value="ipfs">IPFS (via Pinata)</option>
+                <option value="arweave" disabled>Arweave (coming soon)</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Custom Domain (optional)</label>
+            <input type="text" id="np-domain" placeholder="app.example.com">
+        </div>
+        <div class="form-actions">
+            <button class="btn btn-sm btn-outline" id="np-cancel">Cancel</button>
+            <button class="btn btn-sm" id="np-create">Create</button>
+        </div>
+    </div>
+</div>
+
+<!-- Deploy Modal -->
+<div class="modal-overlay" id="deploy-modal">
+    <div class="modal">
+        <h2>Deploy to IPFS</h2>
+        <p style="color:#666;font-size:0.85rem;margin-bottom:1rem;">Upload your site files (HTML, CSS, JS). Single file or zip archive.</p>
+        <div class="upload-area" id="upload-area">
+            <p>Drop files here or click to browse</p>
+            <input type="file" id="deploy-file">
+        </div>
+        <div id="deploy-status" style="margin-top:1rem;font-size:0.85rem;color:#666;display:none;"></div>
+        <div class="form-actions">
+            <button class="btn btn-sm btn-outline" id="deploy-cancel">Cancel</button>
+            <button class="btn btn-sm" id="deploy-submit" disabled>Deploy</button>
+        </div>
+    </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+const API = '/api';
+let token = localStorage.getItem('wf_token');
+let deployProjectId = null;
+
+// --- API helpers ---
+async function api(path, opts = {}) {
+    const headers = { ...opts.headers };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    if (opts.json) {
+        headers['Content-Type'] = 'application/json';
+        opts.body = JSON.stringify(opts.json);
+    }
+    const res = await fetch(API + path, { ...opts, headers });
+    if (res.status === 401) { logout(); throw new Error('Unauthorized'); }
+    if (res.status === 204) return null;
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Request failed');
+    return data;
+}
+
+function toast(msg, type = 'success') {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = `toast ${type}`;
+    el.style.display = 'block';
+    setTimeout(() => el.style.display = 'none', 3500);
+}
+
+// --- Auth ---
+async function login() {
+    const pw = document.getElementById('login-password').value;
+    const errEl = document.getElementById('login-error');
+    try {
+        const data = await api('/auth/login', { method: 'POST', json: { password: pw } });
+        token = data.token;
+        localStorage.setItem('wf_token', token);
+        showPanel();
+    } catch (e) {
+        errEl.textContent = 'Invalid password';
+        errEl.style.display = 'block';
+    }
+}
+
+function logout() {
+    token = null;
+    localStorage.removeItem('wf_token');
+    document.getElementById('panel').classList.remove('active');
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('login-password').value = '';
+}
+
+// --- Panel ---
+async function showPanel() {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('panel').classList.add('active');
+    await loadProjects();
+}
+
+async function loadProjects() {
+    const list = document.getElementById('projects-list');
+    try {
+        const projects = await api('/projects');
+        if (projects.length === 0) {
+            list.innerHTML = '<div class="empty"><p>No projects yet</p><button class="btn btn-sm" onclick="openNewProject()">Create your first project</button></div>';
+            return;
+        }
+        let html = '';
+        for (const p of projects) {
+            const deployments = await api(`/projects/${p.id}/deployments`).catch(() => []);
+            const latest = deployments && deployments.length > 0 ? deployments[0] : null;
+            html += projectCard(p, latest);
+        }
+        list.innerHTML = html;
+    } catch (e) {
+        list.innerHTML = `<div class="empty"><p>Error loading projects</p></div>`;
+    }
+}
+
+function projectCard(p, latestDep) {
+    const badgeClass = `badge-${p.status}`;
+    let depHtml = '';
+    if (latestDep && latestDep.content_hash) {
+        depHtml = `
+            <div class="deployment-info">
+                CID: <code>${latestDep.content_hash}</code><br>
+                <a href="${latestDep.gateway_url}" target="_blank">View on IPFS Gateway</a>
+            </div>`;
+    }
+    return `
+        <div class="project-card">
+            <div class="project-card-header">
+                <div>
+                    <h3>${esc(p.name)}</h3>
+                    <span class="meta">${p.id}</span>
+                </div>
+                <div>
+                    <span class="badge badge-ipfs">${esc(p.target)}</span>
+                    <span class="badge ${badgeClass}">${esc(p.status)}</span>
+                </div>
+            </div>
+            ${depHtml}
+            <div class="project-actions">
+                <button class="btn btn-sm" onclick="openDeploy('${p.id}')">Deploy</button>
+                <button class="btn btn-sm btn-outline btn-danger" onclick="deleteProject('${p.id}')">Delete</button>
+            </div>
+        </div>`;
+}
+
+function esc(s) {
+    const d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+}
+
+// --- New Project ---
+function openNewProject() {
+    document.getElementById('new-project-modal').classList.add('active');
+    document.getElementById('np-name').focus();
+}
+
+function closeNewProject() {
+    document.getElementById('new-project-modal').classList.remove('active');
+    document.getElementById('np-name').value = '';
+    document.getElementById('np-domain').value = '';
+}
+
+async function createProject() {
+    const name = document.getElementById('np-name').value.trim();
+    const target = document.getElementById('np-target').value;
+    const domain = document.getElementById('np-domain').value.trim() || undefined;
+    if (!name) return;
+    try {
+        await api('/projects', { method: 'POST', json: { name, target, domain } });
+        closeNewProject();
+        toast('Project created');
+        await loadProjects();
+    } catch (e) {
+        toast(e.message, 'error');
+    }
+}
+
+async function deleteProject(id) {
+    if (!confirm('Delete this project and all its deployments?')) return;
+    try {
+        await api(`/projects/${id}`, { method: 'DELETE' });
+        toast('Project deleted');
+        await loadProjects();
+    } catch (e) {
+        toast(e.message, 'error');
+    }
+}
+
+// --- Deploy ---
+let deployFile = null;
+
+function openDeploy(projectId) {
+    deployProjectId = projectId;
+    deployFile = null;
+    document.getElementById('deploy-file').value = '';
+    document.getElementById('deploy-submit').disabled = true;
+    document.getElementById('deploy-status').style.display = 'none';
+    document.getElementById('deploy-modal').classList.add('active');
+}
+
+function closeDeploy() {
+    document.getElementById('deploy-modal').classList.remove('active');
+    deployProjectId = null;
+    deployFile = null;
+}
+
+async function submitDeploy() {
+    if (!deployFile || !deployProjectId) return;
+    const btn = document.getElementById('deploy-submit');
+    const status = document.getElementById('deploy-status');
+    btn.disabled = true;
+    btn.textContent = 'Deploying...';
+    status.textContent = 'Uploading to IPFS via Pinata...';
+    status.style.display = 'block';
+
+    const form = new FormData();
+    form.append('file', deployFile);
+
+    try {
+        const res = await fetch(`${API}/projects/${deployProjectId}/deploy`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` },
+            body: form,
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Deploy failed');
+        status.innerHTML = `Deployed! CID: <code>${data.cid}</code><br><a href="${data.gateway_url}" target="_blank" style="color:#6c5ce7">View on IPFS</a>`;
+        toast('Deployed successfully!');
+        setTimeout(() => { closeDeploy(); loadProjects(); }, 2000);
+    } catch (e) {
+        status.textContent = `Error: ${e.message}`;
+        status.style.color = '#e74c3c';
+        toast(e.message, 'error');
+        btn.disabled = false;
+        btn.textContent = 'Deploy';
+    }
+}
+
+// --- Event Listeners ---
+document.getElementById('login-btn').addEventListener('click', login);
+document.getElementById('login-password').addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
+document.getElementById('logout-btn').addEventListener('click', logout);
+document.getElementById('new-project-btn').addEventListener('click', openNewProject);
+document.getElementById('np-cancel').addEventListener('click', closeNewProject);
+document.getElementById('np-create').addEventListener('click', createProject);
+document.getElementById('np-name').addEventListener('keydown', e => { if (e.key === 'Enter') createProject(); });
+document.getElementById('deploy-cancel').addEventListener('click', closeDeploy);
+document.getElementById('deploy-submit').addEventListener('click', submitDeploy);
+
+// File upload
+const uploadArea = document.getElementById('upload-area');
+const fileInput = document.getElementById('deploy-file');
+uploadArea.addEventListener('click', () => fileInput.click());
+uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.classList.add('dragover'); });
+uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
+uploadArea.addEventListener('drop', e => {
+    e.preventDefault();
+    uploadArea.classList.remove('dragover');
+    if (e.dataTransfer.files.length) {
+        deployFile = e.dataTransfer.files[0];
+        uploadArea.querySelector('p').textContent = deployFile.name;
+        document.getElementById('deploy-submit').disabled = false;
+    }
+});
+fileInput.addEventListener('change', () => {
+    if (fileInput.files.length) {
+        deployFile = fileInput.files[0];
+        uploadArea.querySelector('p').textContent = deployFile.name;
+        document.getElementById('deploy-submit').disabled = false;
+    }
+});
+
+// Close modals on overlay click
+document.querySelectorAll('.modal-overlay').forEach(el => {
+    el.addEventListener('click', e => { if (e.target === el) el.classList.remove('active'); });
+});
+
+// --- Init ---
+if (token) {
+    api('/projects').then(() => showPanel()).catch(() => logout());
+} else {
+    document.getElementById('login-screen').style.display = 'flex';
+}
+</script>
+</body>
+</html>
